@@ -13,36 +13,53 @@ namespace StbReader
         {
             if (args.Length <= 0)
             {
-                Console.WriteLine("Please enter path to input file as argument");
-                Console.WriteLine("Usage: StbReader <input-stb-file>");
+                Console.WriteLine("Please enter path to input file and (optionally) path to output txt file as arguments");
+                Console.WriteLine("Usage: StbReader <input-stb-file> [<output-txt-file>]");
                 return 1;
             }
             string inFilePath = "";
+            string outFilePath = "";
             try
             {
-                Console.WriteLine("Hello there!");
                 inFilePath = args[0];
                 Console.WriteLine("InputFile: {0}", inFilePath);
+                if (args.Length == 2)
+                {
+                    outFilePath = args[1];
+                    Console.WriteLine("OutputFile: {0}", outFilePath);
+                }
             } catch (System.IndexOutOfRangeException)
             {
-                Console.WriteLine("Invalid number of arguments");
+                Console.Error.WriteLine("Invalid number of arguments");
             }
 
-            using (FileStream fs = File.OpenRead(inFilePath))
+            List<CharacterManagerTests.Entry> entries = new List<CharacterManagerTests.Entry>();
+            try
             {
-                var entries = CharacterManagerTests.StbReader.Read(fs);
+                using (FileStream fs = File.OpenRead(inFilePath))
+                {
+                    entries = CharacterManagerTests.StbReader.Read(fs);
+
+                }
+                Console.WriteLine();
+                if (outFilePath.Length != 0)
+                {
+                    FileStream filestream = new FileStream(outFilePath, FileMode.Create);
+                    var streamwriter = new StreamWriter(filestream);
+                    streamwriter.AutoFlush = true;
+                    Console.SetOut(streamwriter);
+                }
                 foreach (CharacterManagerTests.Entry e in entries)
                 {
-                    Console.WriteLine("ID: {0}\n{1}\n", e.ID, e.Value);
+                    Console.WriteLine("ID:{0}\t{1}", e.ID, e.Value);
+                    Console.WriteLine();
                 }
-                //byte[] b = new byte[1024];
-                //UTF8Encoding temp = new UTF8Encoding(true);
-                //while (fs.Read(b, 0, b.Length) > 0)
-                //{
-                //    Console.WriteLine(temp.GetString(b));
-                //}
+                return 0;
+            } catch (System.IO.FileNotFoundException e)
+            {
+                Console.Error.WriteLine("Error: {0}", e.Message);
             }
-            return 0;
+            return 1;
         }
     }
 }
